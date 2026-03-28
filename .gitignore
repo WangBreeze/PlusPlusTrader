@@ -1,0 +1,95 @@
+# C++构建产物
+build/
+*.o
+*.a
+*.so
+*.dylib
+*.dll
+*.exe
+*.obj
+*.pdb
+*.ilk
+*.exp
+*.lib
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+pip-log.txt
+pip-delete-this-directory.txt
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+.python-version
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 数据文件
+*.csv
+*.json
+*.db
+*.sqlite
+*.log
+data/
+
+# 环境变量
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# 操作系统
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# 临时文件
+*.tmp
+*.temp
+*.bak
+*.backup
+*.old
+*.save
+
+# 文档生成
+docs/_build/
+docs/_static/
+docs/_templates/
+site/
+
+# 包分发
+dist/
+*.egg
+*.egg-info/
+pip-wheel-metadata/
+share/python-wheels/
+*.whl
+
+# 测试输出
+test_output/
+*.test
+*.test.*

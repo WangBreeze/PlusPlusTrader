@@ -1,0 +1,165 @@
+# PlusPlusTrader Docker Compose配置
+# 版本: 1.0.0
+
+version: '3.8'
+
+services:
+  # PlusPlusTrader主服务
+  pplustrader:
+    build: .
+    container_name: pplustrader
+    restart: unless-stopped
+    ports:
+      - "8050:8050"  # Web界面
+    volumes:
+      - ./data:/app/data           # 数据目录
+      - ./configs:/app/configs     # 配置文件
+      - ./logs:/app/logs           # 日志文件
+      - ./examples:/app/examples   # 示例代码
+    environment:
+      - PYTHONPATH=/app
+      - PPT_LOG_LEVEL=INFO
+      - TZ=Asia/Shanghai
+    networks:
+      - pplustrader-network
+    healthcheck:
+      test: ["CMD", "python", "-c", "import pplustrader"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    command: >
+      sh -c "python web/app.py"
+
+  # 数据库服务（可选）
+  postgres:
+    image: postgres:14-alpine
+    container_name: pplustrader-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: pplustrader
+      POSTGRES_PASSWORD: pplustrader123
+      POSTGRES_DB: pplustrader
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    networks:
+      - pplustrader-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pplustrader"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Redis缓存（可选）
+  redis:
+    image: redis:7-alpine
+    container_name: pplustrader-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - pplustrader-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # 监控服务（可选）
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: pplustrader-prometheus
+    restart: unless-stopped
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    ports:
+      - "9090:9090"
+    networks:
+      - pplustrader-network
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: pplustrader-grafana
+    restart: unless-stopped
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/dashboards:/etc/grafana/provisioning/dashboards
+      - ./monitoring/datasources:/etc/grafana/provisioning/datasources
+    ports:
+      - "3000:3000"
+    networks:
+      - pplustrader-network
+    depends_on:
+      - prometheus
+
+  # 数据下载服务（可选）
+  data-downloader:
+    build: .
+    container_name: pplustrader-data-downloader
+    restart: on-failure
+    volumes:
+      - ./data:/app/data
+      - ./scripts:/app/scripts
+    environment:
+      - PYTHONPATH=/app
+      - PPT_LOG_LEVEL=INFO
+    networks:
+      - pplustrader-network
+    command: >
+      sh -c "python scripts/download_a_shares.py --symbol 000001.SZ --start 2024-01-01 --end 2024-12-31"
+
+  # 定时任务服务（可选）
+  scheduler:
+    build: .
+    container_name: pplustrader-scheduler
+    restart: unless-stopped
+    volumes:
+      - ./data:/app/data
+      - ./scripts:/app/scripts
+      - ./configs:/app/configs
+    environment:
+      - PYTHONPATH=/app
+      - PPT_LOG_LEVEL=INFO
+    networks:
+      - pplustrader-network
+    command: >
+      sh -c "python -m apscheduler"
+
+# 网络配置
+networks:
+  pplustrader-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+# 卷配置
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+
+# 配置覆盖（开发环境）
+# 创建 docker-compose.override.yml 文件来自定义配置

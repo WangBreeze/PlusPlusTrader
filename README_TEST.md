@@ -1,0 +1,1 @@
+# PlusPlusTrader - Quantitative Trading Framework

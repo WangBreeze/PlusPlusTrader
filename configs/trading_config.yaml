@@ -1,0 +1,293 @@
+# PlusPlusTrader 交易配置
+# 版本: 1.0.0
+
+# 基础配置
+general:
+  project_name: "PlusPlusTrader"
+  version: "1.0.0"
+  environment: "production"  # development, testing, production
+  log_level: "INFO"         # DEBUG, INFO, WARNING, ERROR
+  timezone: "Asia/Shanghai"
+
+# 数据源配置
+data_sources:
+  # CSV数据源
+  csv:
+    delimiter: ","
+    encoding: "utf-8"
+    date_format: "%Y-%m-%d"
+    
+  # 实时数据源
+  live:
+    update_interval: 1      # 秒
+    retry_count: 3
+    retry_delay: 5         # 秒
+    
+  # 数据下载配置
+  download:
+    default_source: "akshare"  # akshare, yfinance, tushare
+    cache_enabled: true
+    cache_days: 7
+    parallel_downloads: 3
+
+# 交易配置
+trading:
+  # 基础配置
+  default_exchange: "simulated"  # simulated, binance, huobi
+  default_symbol: "000001.SZ"
+  default_timeframe: "D"         # D=日线, 60=60分钟, 5=5分钟
+  
+  # 费用配置
+  commission_rate: 0.0003        # 佣金率 0.03%
+  tax_rate: 0.001                # 印花税率 0.1%
+  slippage: 0.0001               # 滑点 0.01%
+  
+  # 订单配置
+  order:
+    default_type: "LIMIT"        # LIMIT, MARKET
+    time_in_force: "GTC"         # GTC, IOC, FOK
+    expire_days: 7
+
+# 策略配置
+strategies:
+  # 移动平均交叉策略
+  macross:
+    short_period: 10
+    long_period: 30
+    trade_size: 1000
+    stop_loss: 0.05      # 5%
+    take_profit: 0.10    # 10%
+    
+  # RSI策略
+  rsi:
+    period: 14
+    oversold: 30
+    overbought: 70
+    trade_size: 1000
+    stop_loss: 0.04
+    take_profit: 0.08
+    
+  # 布林带策略
+  bollinger:
+    period: 20
+    std_dev: 2.0
+    trade_size: 1000
+    stop_loss: 0.06
+    take_profit: 0.12
+
+# 回测配置
+backtest:
+  # 基础配置
+  default_initial_capital: 100000
+  default_start_date: "2024-01-01"
+  default_end_date: "2024-12-31"
+  
+  # 性能指标
+  metrics:
+    - "total_return"
+    - "annual_return"
+    - "max_drawdown"
+    - "sharpe_ratio"
+    - "sortino_ratio"
+    - "win_rate"
+    - "profit_factor"
+    
+  # 报告配置
+  report:
+    format: "html"          # html, pdf, markdown
+    include_charts: true
+    include_trades: true
+    save_path: "./reports"
+
+# 风险管理配置
+risk_management:
+  # 仓位管理
+  position_sizing:
+    method: "fixed_risk"    # fixed_risk, kelly, optimal
+    risk_per_trade: 0.01    # 1%
+    max_position: 0.2       # 最大仓位20%
+    
+  # 止损配置
+  stop_loss:
+    enabled: true
+    trailing: false
+    atr_multiplier: 2.0
+    
+  # 风险限制
+  limits:
+    max_daily_loss: 0.03    # 最大日亏损3%
+    max_drawdown: 0.20      # 最大回撤20%
+    max_consecutive_losses: 5
+
+# 实时交易配置
+live_trading:
+  # 监控配置
+  monitoring:
+    enabled: true
+    update_interval: 5      # 秒
+    alert_enabled: true
+    
+  # 自动交易
+  auto_trading:
+    enabled: false
+    trade_confirmation: true
+    max_trades_per_day: 10
+    
+  # 通知配置
+  notifications:
+    email:
+      enabled: false
+      smtp_server: "smtp.gmail.com"
+      smtp_port: 587
+    telegram:
+      enabled: false
+      bot_token: ""
+      chat_id: ""
+
+# 数据库配置
+database:
+  # SQLite（默认）
+  sqlite:
+    enabled: true
+    path: "./data/pplustrader.db"
+    
+  # PostgreSQL（可选）
+  postgres:
+    enabled: false
+    host: "localhost"
+    port: 5432
+    database: "pplustrader"
+    username: "pplustrader"
+    password: "pplustrader123"
+    
+  # Redis缓存（可选）
+  redis:
+    enabled: false
+    host: "localhost"
+    port: 6379
+    db: 0
+
+# Web界面配置
+web:
+  # Dash应用配置
+  dash:
+    host: "0.0.0.0"
+    port: 8050
+    debug: false
+    dev_tools:
+      hot_reload: false
+      
+  # 界面主题
+  theme:
+    primary_color: "#1E88E5"
+    secondary_color: "#FFC107"
+    dark_mode: false
+    
+  # 安全配置
+  security:
+    auth_enabled: false
+    username: "admin"
+    password: "admin123"
+
+# 日志配置
+logging:
+  # 文件日志
+  file:
+    enabled: true
+    path: "./logs/pplustrader.log"
+    max_size: 10485760  # 10MB
+    backup_count: 5
+    format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    
+  # 控制台日志
+  console:
+    enabled: true
+    level: "INFO"
+    
+  # 数据库日志
+  database:
+    enabled: false
+    table_name: "logs"
+
+# 性能优化配置
+performance:
+  # 内存管理
+  memory:
+    cache_enabled: true
+    max_cache_size: 1000
+    preload_data: false
+    
+  # 并行处理
+  parallel:
+    enabled: true
+    max_workers: 4
+    chunk_size: 1000
+    
+  # 向量化计算
+  vectorization:
+    enabled: true
+    use_numpy: true
+    use_cpp: true
+
+# API配置（第三方服务）
+apis:
+  # 数据API
+  data:
+    akshare:
+      timeout: 30
+      retry_count: 3
+      
+    yfinance:
+      timeout: 30
+      retry_count: 3
+      
+    tushare:
+      token: ""
+      timeout: 30
+      
+  # 交易API
+  exchange:
+    binance:
+      api_key: ""
+      api_secret: ""
+      testnet: true
+      
+    huobi:
+      api_key: ""
+      api_secret: ""
+      testnet: true
+
+# 插件配置
+plugins:
+  # 自定义指标
+  custom_indicators:
+    enabled: true
+    path: "./plugins/indicators"
+    
+  # 自定义策略
+  custom_strategies:
+    enabled: true
+    path: "./plugins/strategies"
+    
+  # 数据适配器
+  data_adapters:
+    enabled: true
+    path: "./plugins/adapters"
+
+# 备份配置
+backup:
+  enabled: true
+  schedule: "0 2 * * *"  # 每天凌晨2点
+  retention_days: 30
+  paths:
+    - "./data"
+    - "./configs"
+    - "./logs"
+  destination: "./backups"
+
+# 调试配置
+debug:
+  enabled: false
+  profile: false
+  trace: false
+  memory_leak_detection: false
