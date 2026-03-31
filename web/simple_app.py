@@ -23,6 +23,14 @@ class SimpleWebHandler(BaseHTTPRequestHandler):
             html_content = self.generate_html()
             self.wfile.write(html_content.encode('utf-8'))
             
+        elif self.path == '/charts':
+            self.send_response(200)
+            self.send_header('Content-type', 'text/html; charset=utf-8')
+            self.end_headers()
+            
+            charts_html = self.generate_charts_html()
+            self.wfile.write(charts_html.encode('utf-8'))
+            
         elif self.path == '/api/data':
             self.send_response(200)
             self.send_header('Content-type', 'application/json')
@@ -30,6 +38,14 @@ class SimpleWebHandler(BaseHTTPRequestHandler):
             
             data = self.generate_mock_data()
             self.wfile.write(json.dumps(data).encode('utf-8'))
+            
+        elif self.path == '/api/chart-data':
+            self.send_response(200)
+            self.send_header('Content-type', 'application/json')
+            self.end_headers()
+            
+            chart_data = self.generate_chart_data()
+            self.wfile.write(json.dumps(chart_data).encode('utf-8'))
             
         else:
             self.send_response(404)
@@ -286,6 +302,7 @@ class SimpleWebHandler(BaseHTTPRequestHandler):
             <div class="tab" onclick="switchTab('guide')">📚 使用指南</div>
             <div class="tab" onclick="switchTab('examples')">💡 示例代码</div>
             <div class="tab" onclick="switchTab('config')">⚙️ 系统配置</div>
+            <div class="tab" onclick="window.location.href='/charts'">📈 K线图</div>
         </div>
         
         <!-- 内容区域 -->
@@ -794,6 +811,62 @@ for price in prices:
             })
         
         return data
+    
+    def generate_charts_html(self):
+        """生成K线图HTML页面"""
+        try:
+            with open('/home/wanglc/.openclaw/workspace/PlusPlusTrader/web/templates/charts.html', 'r', encoding='utf-8') as f:
+                return f.read()
+        except FileNotFoundError:
+            return '''
+<!DOCTYPE html>
+<html>
+<head>
+    <title>K线图 - 文件未找到</title>
+</head>
+<body>
+    <h1>K线图模板文件未找到</h1>
+    <p>请确保 charts.html 文件存在</p>
+</body>
+</html>'''
+    
+    def generate_chart_data(self):
+        """生成K线图数据"""
+        import random
+        from datetime import datetime, timedelta
+        
+        data = []
+        base_price = 100.0
+        base_time = datetime.now() - timedelta(days=100)
+        
+        for i in range(100):
+            time = base_time + timedelta(days=i)
+            open_price = base_price
+            change = (random.random() - 0.5) * 10
+            close_price = open_price + change
+            high_price = max(open_price, close_price) + random.random() * 3
+            low_price = min(open_price, close_price) - random.random() * 3
+            volume = random.randint(100000, 1000000)
+            
+            data.append({
+                'time': int(time.timestamp()),
+                'open': round(open_price, 2),
+                'high': round(high_price, 2),
+                'low': round(low_price, 2),
+                'close': round(close_price, 2),
+                'volume': volume
+            })
+            
+            base_price = close_price
+        
+        return {
+            'symbol': '000001.SZ',
+            'name': '平安银行',
+            'data': data,
+            'period': '1d',
+            'count': len(data),
+            'timestamp': int(datetime.now().timestamp())
+        }
 
 def main():
     """主函数"""
